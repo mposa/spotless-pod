@@ -16,16 +16,15 @@ if (NOT matlab )
   message(FATAL_ERROR "Could not find matlab executable")
 endif()
 
-add_custom_target(run ALL
-			  DEPENDS
-			  "${CMAKE_INSTALL_PREFIX}/matlab/addpath_spotless.m"
-			  "${CMAKE_INSTALL_PREFIX}/matlab/rmpath_spotless.m")
+# workflow below modeled after example at https://cmake.org/Wiki/CustomCommandCustomTargetInstall
 
-add_custom_command(OUTPUT "${CMAKE_INSTALL_PREFIX}/matlab/addpath_spotless.m" "${CMAKE_INSTALL_PREFIX}/matlab/rmpath_spotless.m"
-			  COMMAND ${matlab} -wait -nosplash -nodesktop -nodisplay -r "\"cd('${CMAKE_CURRENT_SOURCE_DIR}');spot_pods_install('${CMAKE_INSTALL_PREFIX}/matlab','${relpath}');exit\""
+add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/matlab/addpath_spotless.m" "${CMAKE_BINARY_DIR}/matlab/rmpath_spotless.m"
+			  COMMAND ${matlab} -wait -nosplash -nodesktop -nodisplay -r "\"cd('${CMAKE_CURRENT_SOURCE_DIR}');spot_pods_install('${CMAKE_BINARY_DIR}/matlab','${relpath}');exit\""
 			  DEPENDS
 			    "${CMAKE_CURRENT_SOURCE_DIR}/spotless/spot_install.m"
 			    "${CMAKE_CURRENT_SOURCE_DIR}/spot_pods_install.m"
         )
+add_custom_target(pathfiles ALL DEPENDS "${CMAKE_BINARY_DIR}/matlab/addpath_spotless.m" "${CMAKE_BINARY_DIR}/matlab/rmpath_spotless.m")
 
-add_custom_target(install DEPENDS run) 
+install(FILES "${CMAKE_BINARY_DIR}/matlab/addpath_spotless.m" "${CMAKE_BINARY_DIR}/matlab/rmpath_spotless.m"
+          DESTINATION ${CMAKE_INSTALL_PREFIX}/matlab)
