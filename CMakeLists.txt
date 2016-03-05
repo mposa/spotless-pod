@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 2.6.0)
 set(POD_NAME spotless)
 include(cmake/pods.cmake)
 
-get_relative_path("${CMAKE_INSTALL_PREFIX}/matlab" "${CMAKE_CURRENT_SOURCE_DIR}" relpath)
+file(RELATIVE_PATH relpath ${CMAKE_INSTALL_PREFIX}/matlab ${CMAKE_CURRENT_SOURCE_DIR})
 
 # setup matlab pods-compliance
 include(cmake/matlab_pods.cmake)
