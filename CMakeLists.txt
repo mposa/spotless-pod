@@ -1,30 +1,39 @@
-cmake_minimum_required(VERSION 2.6.0)
-#cmake_minimum_required(VERSION 2.8.8)  # need the object library
+cmake_minimum_required(VERSION 2.8.12)
 
-# set up pods
-set(POD_NAME spotless)
-include(cmake/pods.cmake)
+project(spotless)
 
-file(RELATIVE_PATH relpath ${CMAKE_INSTALL_PREFIX}/matlab ${CMAKE_CURRENT_SOURCE_DIR})
+find_package(Matlab REQUIRED COMPONENTS MAIN_PROGRAM)
 
-# setup matlab pods-compliance
-include(cmake/matlab_pods.cmake)
-pods_configure_matlab_paths()
+set(SPOTLESS_MEX_DIR "${CMAKE_CURRENT_SOURCE_DIR}/spotless/mex")
 
-find_program(matlab matlab)
-if (NOT matlab )
-  message(FATAL_ERROR "Could not find matlab executable")
-endif()
+set(SPOTLESS_MEX_SOURCES
+  "${SPOTLESS_MEX_DIR}/spot_gset.c"
+  "${SPOTLESS_MEX_DIR}/spot_mex_helpers.cpp"
+  "${SPOTLESS_MEX_DIR}/spot_mex_msspoly_check_canonical.cpp"
+  "${SPOTLESS_MEX_DIR}/spot_mex_msspoly_make_canonical_combine_coeffs.cpp"
+  "${SPOTLESS_MEX_DIR}/spot_mex_msspoly_make_canonical_combine_powers.cpp")
 
-# workflow below modeled after example at https://cmake.org/Wiki/CustomCommandCustomTargetInstall
+set(SPOTLESS_MEX_OUTPUTS
+  "${SPOTLESS_MEX_DIR}/spot_gset.${Matlab_MEX_EXTENSION}"
+  "${SPOTLESS_MEX_DIR}/spot_mex_msspoly_check_canonical.${Matlab_MEX_EXTENSION}"
+  "${SPOTLESS_MEX_DIR}/spot_mex_msspoly_make_canonical_combine_coeffs.${Matlab_MEX_EXTENSION}"
+  "${SPOTLESS_MEX_DIR}/spot_mex_msspoly_make_canonical_combine_powers.${Matlab_MEX_EXTENSION}")
 
-add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/matlab/addpath_spotless.m" "${CMAKE_BINARY_DIR}/matlab/rmpath_spotless.m"
-			  COMMAND ${matlab} -wait -nosplash -nodesktop -nodisplay -r "\"cd('${CMAKE_CURRENT_SOURCE_DIR}');spot_pods_install('${CMAKE_BINARY_DIR}/matlab','${relpath}');exit\""
-			  DEPENDS
-			    "${CMAKE_CURRENT_SOURCE_DIR}/spotless/spot_install.m"
-			    "${CMAKE_CURRENT_SOURCE_DIR}/spot_pods_install.m"
-        )
-add_custom_target(pathfiles ALL DEPENDS "${CMAKE_BINARY_DIR}/matlab/addpath_spotless.m" "${CMAKE_BINARY_DIR}/matlab/rmpath_spotless.m")
+set(SPOTLESS_INSTALL_LOG "${CMAKE_CURRENT_BINARY_DIR}/spotless_install.log")
 
-install(FILES "${CMAKE_BINARY_DIR}/matlab/addpath_spotless.m" "${CMAKE_BINARY_DIR}/matlab/rmpath_spotless.m"
-          DESTINATION ${CMAKE_INSTALL_PREFIX}/matlab)
+add_custom_command(
+  OUTPUT ${SPOTLESS_MEX_OUTPUTS}
+  COMMAND "${Matlab_MAIN_PROGRAM}" -logfile "${SPOTLESS_INSTALL_LOG}" -nosplash -nodesktop -nodisplay -wait -r "spot_install;exit"
+  DEPENDS ${SPOTLESS_MEX_SOURCES}
+  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/spotless"
+  COMMENT "Installing spotless...")
+
+add_custom_target(spot_install ALL DEPENDS ${SPOTLESS_MEX_OUTPUTS})
+
+configure_file(addpath_spotless.m.in addpath_spotless.m @ONLY)
+configure_file(rmpath_spotless.m.in rmpath_spotless.m @ONLY)
+
+install(FILES
+  "${CMAKE_CURRENT_BINARY_DIR}/addpath_spotless.m"
+  "${CMAKE_CURRENT_BINARY_DIR}/rmpath_spotless.m"
+  DESTINATION matlab)
