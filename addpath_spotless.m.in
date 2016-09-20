@@ -1,0 +1,9 @@
+function addpath_spotless()
+  spotless_dir='@CMAKE_CURRENT_SOURCE_DIR@';
+  addpath(fullfile(spotless_dir,'spotless'));
+  addpath(fullfile(spotless_dir,'spotless','mex'));
+  addpath(fullfile(spotless_dir,'spotless','mss'));
+  addpath(fullfile(spotless_dir,'spotless','spotopt'));
+  addpath(fullfile(spotless_dir,'spotless','spotopt','solvers'));
+  addpath(fullfile(spotless_dir,'spotless','spotopt','util'));
+  addpath(fullfile(spotless_dir,'spotless','util'));

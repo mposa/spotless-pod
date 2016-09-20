@@ -1,0 +1,9 @@
+function rmpath_spotless()
+  spotless_dir='@CMAKE_CURRENT_SOURCE_DIR@';
+  rmpath(fullfile(spotless_dir,'spotless'));
+  rmpath(fullfile(spotless_dir,'spotless','mex'));
+  rmpath(fullfile(spotless_dir,'spotless','mss'));
+  rmpath(fullfile(spotless_dir,'spotless','spotopt'));
+  rmpath(fullfile(spotless_dir,'spotless','spotopt','solvers'));
+  rmpath(fullfile(spotless_dir,'spotless','spotopt','util'));
+  rmpath(fullfile(spotless_dir,'spotless','util'));
