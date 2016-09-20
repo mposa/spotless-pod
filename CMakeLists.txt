@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.5)
 
 project(spotless)
 
@@ -28,7 +28,7 @@ add_custom_command(
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/spotless"
   COMMENT "Installing spotless...")
 
-add_custom_target(spot_install ALL DEPENDS ${SPOTLESS_MEX_OUTPUTS})
+add_custom_target(spotless_install ALL DEPENDS ${SPOTLESS_MEX_OUTPUTS})
 
 configure_file(addpath_spotless.m.in addpath_spotless.m @ONLY)
 configure_file(rmpath_spotless.m.in rmpath_spotless.m @ONLY)
