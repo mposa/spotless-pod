@@ -3,7 +3,9 @@ cmake_minimum_required(VERSION 3.5)
 project(spotless)
 
 if(CMAKE_VERSION VERSION_LESS 3.7)
-  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/3.7")
+  set(CMAKE_MODULE_PATH
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/3.7"
+    ${CMAKE_MODULE_PATH})
 endif()
 
 find_package(Matlab REQUIRED COMPONENTS MAIN_PROGRAM)
