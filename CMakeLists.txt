@@ -8,33 +8,70 @@ if(CMAKE_VERSION VERSION_LESS 3.7)
     ${CMAKE_MODULE_PATH})
 endif()
 
-find_package(Matlab REQUIRED COMPONENTS MAIN_PROGRAM)
+include(CTest)
+
+find_package(Matlab REQUIRED COMPONENTS MAIN_PROGRAM MEX_COMPILER MX_LIBRARY)
 
 set(SPOTLESS_MEX_DIR "${CMAKE_CURRENT_SOURCE_DIR}/spotless/mex")
 
-set(SPOTLESS_MEX_SOURCES
-  "${SPOTLESS_MEX_DIR}/spot_gset.c"
-  "${SPOTLESS_MEX_DIR}/spot_mex_helpers.cpp"
-  "${SPOTLESS_MEX_DIR}/spot_mex_msspoly_check_canonical.cpp"
+matlab_add_mex(NAME spot_gset SRC
+  "${SPOTLESS_MEX_DIR}/spot_gset.c")
+
+matlab_add_mex(NAME spot_mex_msspoly_check_canonical SRC
+  "${SPOTLESS_MEX_DIR}/spot_mex_msspoly_check_canonical.cpp")
+
+matlab_add_mex(NAME spot_mex_msspoly_make_canonical_combine_coeffs SRC
   "${SPOTLESS_MEX_DIR}/spot_mex_msspoly_make_canonical_combine_coeffs.cpp"
-  "${SPOTLESS_MEX_DIR}/spot_mex_msspoly_make_canonical_combine_powers.cpp")
+  "${SPOTLESS_MEX_DIR}/spot_mex_helpers.cpp")
 
-set(SPOTLESS_MEX_OUTPUTS
-  "${SPOTLESS_MEX_DIR}/spot_gset.${Matlab_MEX_EXTENSION}"
-  "${SPOTLESS_MEX_DIR}/spot_mex_msspoly_check_canonical.${Matlab_MEX_EXTENSION}"
-  "${SPOTLESS_MEX_DIR}/spot_mex_msspoly_make_canonical_combine_coeffs.${Matlab_MEX_EXTENSION}"
-  "${SPOTLESS_MEX_DIR}/spot_mex_msspoly_make_canonical_combine_powers.${Matlab_MEX_EXTENSION}")
+matlab_add_mex(NAME spot_mex_msspoly_make_canonical_combine_powers SRC
+  "${SPOTLESS_MEX_DIR}/spot_mex_msspoly_make_canonical_combine_powers.cpp"
+  "${SPOTLESS_MEX_DIR}/spot_mex_helpers.cpp")
 
-set(SPOTLESS_INSTALL_LOG "${CMAKE_CURRENT_BINARY_DIR}/spotless_install.log")
+set_target_properties(
+  spot_gset
+  spot_mex_msspoly_check_canonical
+  spot_mex_msspoly_make_canonical_combine_coeffs
+  spot_mex_msspoly_make_canonical_combine_powers
+  PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "${SPOTLESS_MEX_DIR}"
+    LIBRARY_OUTPUT_DIRECTORY "${SPOTLESS_MEX_DIR}"
+    RUNTIME_OUTPUT_DIRECTORY "${SPOTLESS_MEX_DIR}")
 
-add_custom_command(
-  OUTPUT ${SPOTLESS_MEX_OUTPUTS}
-  COMMAND "${Matlab_MAIN_PROGRAM}" -logfile "${SPOTLESS_INSTALL_LOG}" -nosplash -nodesktop -nodisplay -wait -r "spot_install;exit"
-  DEPENDS ${SPOTLESS_MEX_SOURCES}
-  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/spotless"
-  COMMENT "Installing spotless...")
+if(BUILD_TESTING)
+  set(SPOTLESS_ADDITIONAL_PATH
+    "${CMAKE_CURRENT_SOURCE_DIR}/spotless"
+    "${CMAKE_CURRENT_SOURCE_DIR}/spotless/mex"
+    "${CMAKE_CURRENT_SOURCE_DIR}/spotless/mss"
+    "${CMAKE_CURRENT_SOURCE_DIR}/spotless/spotopt"
+    "${CMAKE_CURRENT_SOURCE_DIR}/spotless/spotopt/solvers"
+    "${CMAKE_CURRENT_SOURCE_DIR}/spotless/spotopt/util"
+    "${CMAKE_CURRENT_SOURCE_DIR}/spotless/util")
 
-add_custom_target(spotless_install ALL DEPENDS ${SPOTLESS_MEX_OUTPUTS})
+  matlab_add_unit_test(NAME spot_mex_test
+    UNITTEST_FILE "${SPOTLESS_MEX_DIR}/spot_mex_test.m"
+    TIMEOUT -1
+    ADDITIONAL_PATH "${SPOTLESS_ADDITIONAL_PATH}"
+    MATLAB_ADDITIONAL_STARTUP_OPTIONS -nojvm)
+
+  set(SPOTLESS_TESTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/spotless/tests")
+
+  matlab_add_unit_test(NAME msspoly_tests
+    UNITTEST_FILE "${SPOTLESS_TESTS_DIR}/msspoly_tests.m"
+    TIMEOUT -1
+    ADDITIONAL_PATH "${SPOTLESS_ADDITIONAL_PATH}"
+    MATLAB_ADDITIONAL_STARTUP_OPTIONS -nojvm)
+
+  option(HAVE_SEDUMI "SeDuMi is installed and in the MATLAB search path" OFF)
+
+  if(HAVE_SEDUMI)
+    matlab_add_unit_test(NAME mssprog_tests
+      UNITTEST_FILE "${SPOTLESS_TESTS_DIR}/mssprog_tests.m"
+      TIMEOUT -1
+      ADDITIONAL_PATH "${SPOTLESS_ADDITIONAL_PATH}"
+      MATLAB_ADDITIONAL_STARTUP_OPTIONS -nojvm)
+  endif()
+endif()
 
 configure_file(addpath_spotless.m.in addpath_spotless.m @ONLY)
 configure_file(rmpath_spotless.m.in rmpath_spotless.m @ONLY)
