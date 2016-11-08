@@ -6,6 +6,7 @@ Wrapper for SPOTless
 <https://github.com/spot-toolbox/spotless>
 
 ```
+$ git submodule update --init spotless
 $ mkdir build && cd build
 $ cmake ..
 $ make install
