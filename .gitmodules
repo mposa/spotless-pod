@@ -1,4 +1,4 @@
 [submodule "spotless"]
 	path = spotless
-	url = https://github.com/mposa/spotless
+	url = https://github.com/mposa/spot
 	branch = development
